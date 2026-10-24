@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지식의 도미노 (Domino of Knowledge) - 2022 개정 수학·물리·화학</title>
+  
+  <!-- Favicon & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#b9dffe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+            },
+            math: {
+              light: '#f5f3ff',
+              accent: '#8b5cf6',
+              border: '#ddd6fe',
+              text: '#6d28d9'
+            },
+            physics: {
+              light: '#eff6ff',
+              accent: '#3b82f6',
+              border: '#bfdbfe',
+              text: '#1d4ed8'
+            },
+            chem: {
+              light: '#ecfdf5',
+              accent: '#10b981',
+              border: '#a7f3d0',
+              text: '#047857'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- KaTeX for pristine math & chemistry rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/mhchem.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-[#f8fafc] text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-sm transition-all">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo & Motto -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="app.resetToHome()">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
+          <i data-lucide="blocks" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 bg-clip-text text-transparent">지식의 도미노</span>
+            <span class="text-xs px-2 py-0.5 font-semibold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">2022 개정</span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">정답을 넘어, 막힌 개념을 역추적하는 학습 도우미</p>
+        </div>
+      </div>
+
+      <!-- Navigation & Action Controls -->
+      <div class="flex items-center gap-3">
+        <!-- 2022 Curriculum Info Button -->
+        <button onclick="app.openCurriculumModal()" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+          <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i>
+          <span>2022 개정 단원표</span>
+        </button>
+
+        <!-- API Key Status & Setup Button -->
+        <button id="apiKeyBtn" onclick="app.openApiKeyModal()" class="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg border transition shadow-sm bg-white border-slate-300 hover:border-slate-400 text-slate-700">
+          <span id="apiKeyStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+          <span id="apiKeyBtnText">API 키 설정</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- Notice Banner (if any) -->
+    <div id="alertBanner" class="hidden rounded-xl p-4 text-sm flex items-start gap-3 border shadow-sm transition">
+      <i id="alertIcon" data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+      <div class="flex-1" id="alertMessage">알림 내용</div>
+      <button onclick="app.hideAlert()" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- VIEW 1: PROBLEM INPUT & SUBJECT SELECTOR -->
+    <section id="problemInputSection" class="space-y-6">
+      
+      <!-- Top Hero Card: Subject Tabs -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">어떤 과목의 문제를 해결하고 싶나요?</h1>
+            <p class="text-sm text-slate-500 mt-1">풀다가 막힌 문제의 사진을 올리거나 질문을 입력하면, AI가 단계별 풀이와 부족한 개념을 찾아줍니다.</p>
+          </div>
+          <!-- Subject Switcher Tabs -->
+          <div class="inline-flex p-1.5 bg-slate-100 rounded-xl gap-1 shrink-0" id="subjectTabGroup">
+            <button onclick="app.setSubject('math')" id="tab-math" class="subject-tab flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition whitespace-nowrap bg-white text-indigo-600 shadow-sm">
+              <i data-lucide="sigma" class="w-4 h-4 shrink-0"></i>
+              <span>수학</span>
+            </button>
+            <button onclick="app.setSubject('physics')" id="tab-physics" class="subject-tab flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition whitespace-nowrap text-slate-600 hover:text-slate-900">
+              <i data-lucide="orbit" class="w-4 h-4 shrink-0"></i>
+              <span>물리</span>
+            </button>
+            <button onclick="app.setSubject('chemistry')" id="tab-chemistry" class="subject-tab flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition whitespace-nowrap text-slate-600 hover:text-slate-900">
+              <i data-lucide="flask-conical" class="w-4 h-4 shrink-0"></i>
+              <span>화학</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Subject Description Banner -->
+        <div id="subjectBanner" class="mt-4 p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 flex items-center justify-between">
+          <div class="flex items-center gap-2.5 text-xs text-indigo-900">
+            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i>
+            <span id="subjectBannerText"><strong>2022 개정 공통수학1, 대수, 미적분Ⅰ</strong> 지원: 대수적 풀이와 선수 개념 역추적</span>
+          </div>
+          <span class="text-[11px] text-indigo-600 font-medium">단원명 2022 개정 준수</span>
+        </div>
+
+        <!-- Input Area Grid -->
+        <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Left: Image Upload & Dropzone -->
+          <div class="lg:col-span-6 flex flex-col">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <i data-lucide="camera" class="w-4 h-4 text-sky-500"></i>
+              <span>문제 사진 업로드</span>
+            </label>
+            <div id="dropzone" class="flex-1 min-h-[220px] border-2 border-dashed border-slate-300 hover:border-sky-400 bg-slate-50/60 hover:bg-sky-50/30 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition relative group">
+              <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="app.handleImageSelect(event)">
+              
+              <div id="dropzonePlaceholder" class="space-y-3">
+                <div class="w-12 h-12 mx-auto rounded-full bg-white shadow-sm flex items-center justify-center text-sky-500 group-hover:scale-110 transition">
+                  <i data-lucide="image-plus" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-slate-700">문제 사진을 드래그하거나 클릭하여 업로드</p>
+                  <p class="text-xs text-slate-400 mt-1">PNG, JPG, 스마트폰 촬영 사진 지원 (Ctrl+V 붙여넣기 가능)</p>
+                </div>
+              </div>
+
+              <!-- Preview Image Container (Hidden initially) -->
+              <div id="imagePreviewContainer" class="hidden relative w-full h-full max-h-[220px] flex items-center justify-center">
+                <img id="imagePreview" src="" alt="문제 미리보기" class="max-h-[190px] rounded-lg object-contain shadow-sm border border-slate-200">
+                <button type="button" onclick="app.removeImage(event)" class="absolute top-1 right-1 p-1 bg-white/90 hover:bg-white text-rose-500 rounded-full shadow-md transition">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Text Description / Problem Direct Input -->
+          <div class="lg:col-span-6 flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="pencil" class="w-4 h-4 text-indigo-500"></i>
+                <span>문제 직접 입력 또는 메모</span>
+              </label>
+              <button onclick="app.loadPresetExample()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                <i data-lucide="file-question" class="w-3.5 h-3.5"></i>
+                <span>대표 예제 불러오기</span>
+              </button>
+            </div>
+            
+            <textarea id="problemTextInput" rows="6" placeholder="문제 내용을 입력하세요. (수식은 KaTeX 기호 $...$ 또는 텍스트로 자유롭게 적으시면 됩니다)" class="w-full flex-1 p-3.5 text-sm rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition bg-white resize-none text-slate-800"></textarea>
+
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+              <span id="activeModelLabel">선택 AI 모델: <strong class="text-slate-700 font-semibold">Gemini 3.5 Flash</strong></span>
+              <span>수식/화학식 자동 KaTeX 렌더링 지원</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Action Button -->
+        <div class="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-xs text-slate-500 flex items-center gap-2">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+            <span>정답만 일방적으로 제시하지 않고, 사고 과정을 단계별로 나누어 학습을 지원합니다.</span>
+          </div>
+
+          <button id="analyzeBtn" onclick="app.startAnalysis()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-500/20 hover:shadow-lg transition flex items-center justify-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>지식의 도미노 풀이 분석 시작</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Quick Preset Examples Cards for 2022 Curriculum -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
+          <i data-lucide="bookmark" class="w-4 h-4 text-amber-500"></i>
+          <span>2022 개정 과목별 대표 예제 체험</span>
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="presetCardsGrid">
+          <!-- Math Example Card -->
+          <div onclick="app.selectSubjectAndLoadDemo('math')" class="p-4 rounded-xl border border-slate-200 hover:border-indigo-400 bg-slate-50/50 hover:bg-indigo-50/30 cursor-pointer transition group">
+            <div class="flex items-center justify-between text-xs font-semibold text-indigo-600 mb-2">
+              <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">수학</span>
+              <span class="text-slate-400 group-hover:text-indigo-600 transition">선택하기 →</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">이차방정식과 십자 인수분해</h3>
+            <p class="text-xs text-slate-500 mt-1 line-clamp-2">$2x^2 - 5x - 3 = 0$ 의 두 실근 구하기와 영인자 성질</p>
+            <div class="mt-3 text-[11px] text-slate-400 flex items-center gap-1">
+              <i data-lucide="tag" class="w-3 h-3"></i>
+              <span>공통수학1 > 방정식과 부등식</span>
+            </div>
+          </div>
+
+          <!-- Physics Example Card -->
+          <div onclick="app.selectSubjectAndLoadDemo('physics')" class="p-4 rounded-xl border border-slate-200 hover:border-sky-400 bg-slate-50/50 hover:bg-sky-50/30 cursor-pointer transition group">
+            <div class="flex items-center justify-between text-xs font-semibold text-sky-600 mb-2">
+              <span class="px-2 py-0.5 rounded bg-sky-100 text-sky-700">물리</span>
+              <span class="text-slate-400 group-hover:text-sky-600 transition">선택하기 →</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">뉴턴 제2법칙과 자유물체도(FBD)</h3>
+            <p class="text-xs text-slate-500 mt-1 line-clamp-2">마찰 없는 수평면 위 물체의 합력 계산과 가속도 구하기</p>
+            <div class="mt-3 text-[11px] text-slate-400 flex items-center gap-1">
+              <i data-lucide="tag" class="w-3 h-3"></i>
+              <span>물리학 > 역학과 에너지</span>
+            </div>
+          </div>
+
+          <!-- Chemistry Example Card -->
+          <div onclick="app.selectSubjectAndLoadDemo('chemistry')" class="p-4 rounded-xl border border-slate-200 hover:border-emerald-400 bg-slate-50/50 hover:bg-emerald-50/30 cursor-pointer transition group">
+            <div class="flex items-center justify-between text-xs font-semibold text-emerald-600 mb-2">
+              <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">화학</span>
+              <span class="text-slate-400 group-hover:text-emerald-600 transition">선택하기 →</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">화학 반응의 양적 관계와 몰비</h3>
+            <p class="text-xs text-slate-500 mt-1 line-clamp-2">메테인($\mathrm{CH_4}$) 연소 반응식과 질량-몰수 변환</p>
+            <div class="mt-3 text-[11px] text-slate-400 flex items-center gap-1">
+              <i data-lucide="tag" class="w-3 h-3"></i>
+              <span>화학 > 화학 반응과 에너지</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- VIEW 2: LOADING / AI ANALYSIS STATE (동적 실시간 진행 상태 화면) -->
+    <section id="loadingSection" class="hidden py-8 max-w-2xl mx-auto space-y-6">
+      
+      <!-- Main Loading Hero Card -->
+      <div class="bg-white rounded-2xl p-8 border border-slate-200/80 shadow-sm text-center space-y-6">
+        
+        <!-- Animated 3D Domino Wave Graphic -->
+        <div class="domino-wave-container">
+          <div class="domino-wave-piece"><span class="dot-top"></span><span class="dot-bottom"></span></div>
+          <div class="domino-wave-piece"><span class="dot-top"></span><span class="dot-bottom"></span></div>
+          <div class="domino-wave-piece"><span class="dot-top"></span><span class="dot-bottom"></span></div>
+          <div class="domino-wave-piece"><span class="dot-top"></span><span class="dot-bottom"></span></div>
+          <div class="domino-wave-piece"><span class="dot-top"></span><span class="dot-bottom"></span></div>
+        </div>
+
+        <!-- Status Title & Realtime Timer -->
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold mb-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
+            <span>AI 지식의 도미노 엔진 실시간 가동 중</span>
+            <span class="text-indigo-400">|</span>
+            <span id="loadingTimerText">0.0초 경과</span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight" id="loadingMainTitle">문제 분석 및 개념 역추적 진행 중</h2>
+          <p class="text-xs text-slate-500 mt-1" id="loadingStatusText">2022 개정 교육과정 기준 풀이 단계와 개념 도미노를 설계하고 있습니다.</p>
+        </div>
+
+        <!-- Progress Bar with Percentage -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-600 px-1">
+            <span id="loadingStepLabel">1단계: 문제 이미지 및 텍스트 인식</span>
+            <span id="loadingPercentLabel" class="text-indigo-600">15%</span>
+          </div>
+          <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+            <div id="loadingProgressBar" class="h-full rounded-full progress-shimmer transition-all duration-500" style="width: 15%;"></div>
+          </div>
+        </div>
+
+        <!-- Multi-stage Checklist Card -->
+        <div class="text-left bg-slate-50/70 rounded-xl p-4 border border-slate-200/80 space-y-2.5 text-xs" id="loadingChecklistContainer">
+          
+          <div class="flex items-center gap-3 transition-all" id="chk-step-1">
+            <div class="step-icon w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-[11px] flex-shrink-0 shadow-sm step-pulse">
+              1
+            </div>
+            <div class="flex-1">
+              <span class="font-bold text-slate-800">문제 내용 및 수식 판독</span>
+              <span class="text-[11px] text-slate-500 block">제공된 사진 및 입력 텍스트의 수식/조건 정밀 추출</span>
+            </div>
+            <span class="step-status text-[11px] font-semibold text-indigo-600">분석 중...</span>
+          </div>
+
+          <div class="flex items-center gap-3 transition-all opacity-40" id="chk-step-2">
+            <div class="step-icon w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+              2
+            </div>
+            <div class="flex-1">
+              <span class="font-bold text-slate-800">2022 개정 교육과정 단원 매핑</span>
+              <span class="text-[11px] text-slate-500 block">과목(수학/물리/화학) 및 핵심 성취기준 체계 연결</span>
+            </div>
+            <span class="step-status text-[11px] text-slate-400">대기 중</span>
+          </div>
+
+          <div class="flex items-center gap-3 transition-all opacity-40" id="chk-step-3">
+            <div class="step-icon w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+              3
+            </div>
+            <div class="flex-1">
+              <span class="font-bold text-slate-800">3~5개 사고 단계 분할 및 핵심 식 구성</span>
+              <span class="text-[11px] text-slate-500 block">지나친 계산을 배제하고 의미 있는 큰 풀이 단계 설계</span>
+            </div>
+            <span class="step-status text-[11px] text-slate-400">대기 중</span>
+          </div>
+
+          <div class="flex items-center gap-3 transition-all opacity-40" id="chk-step-4">
+            <div class="step-icon w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+              4
+            </div>
+            <div class="flex-1">
+              <span class="font-bold text-slate-800">선수 개념 역추적 도미노 체인 구축</span>
+              <span class="text-[11px] text-slate-500 block">각 단계에서 막혔을 때 필요한 기초 지식 트리 연결</span>
+            </div>
+            <span class="step-status text-[11px] text-slate-400">대기 중</span>
+          </div>
+
+          <div class="flex items-center gap-3 transition-all opacity-40" id="chk-step-5">
+            <div class="step-icon w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-[11px] flex-shrink-0">
+              5
+            </div>
+            <div class="flex-1">
+              <span class="font-bold text-slate-800">개념 카드 및 4지선다 진단 퀴즈 검증</span>
+              <span class="text-[11px] text-slate-500 block">쉬운 예제와 착각하기 쉬운 오답 분석 데이터 준비</span>
+            </div>
+            <span class="step-status text-[11px] text-slate-400">대기 중</span>
+          </div>
+
+        </div>
+
+        <!-- Rotating Educational Study Tips -->
+        <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/70 text-left flex items-start gap-2.5 text-xs text-amber-900 transition-all">
+          <i data-lucide="lightbulb" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+          <div>
+            <span class="font-bold block text-amber-950">학습 도우미 팁</span>
+            <p id="loadingTipText" class="text-amber-800/90 mt-0.5 transition-opacity duration-300">
+              '지식의 도미노'는 정답만 알려주지 않고, 내가 막힌 단계의 기초 개념을 찾아줍니다.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- VIEW 3: PROBLEM STEPS DISPLAY (지식의 도미노 메인 풀이 화면) -->
+    <section id="solutionStepsSection" class="hidden space-y-6">
+      
+      <!-- Problem Header Summary Card -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <span id="problemSubjectBadge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200">수학</span>
+            <span id="problemCurriculumBadge" class="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">2022 개정 교육과정</span>
+          </div>
+          <button onclick="app.resetToHome()" class="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>새 문제 입력하기</span>
+          </button>
+        </div>
+
+        <div class="mt-4">
+          <h2 id="problemTitle" class="text-xl font-bold text-slate-900">문제 제목</h2>
+          <div id="problemStatement" class="mt-2 text-sm text-slate-700 leading-relaxed bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/70 math-content">
+            <!-- Problem text rendered here -->
+          </div>
+        </div>
+
+        <!-- Student Guide Alert -->
+        <div class="mt-4 p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-center gap-2.5 text-xs text-amber-900">
+          <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
+          <span>자신의 풀이와 비교해 보세요. <strong>이해가 되지 않거나 막힌 단계의 '이 과정이 이해되지 않아요' 버튼</strong>을 누르면 기초 개념을 거슬러 올라가 배울 수 있습니다.</span>
+        </div>
+      </div>
+
+      <!-- Macro Steps List -->
+      <div class="space-y-4" id="stepsContainer">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+
+    </section>
+
+    <!-- VIEW 4: CONCEPT LEARNING & QUIZ VIEW (개념 역추적 도미노 학습 카드) -->
+    <section id="conceptLearningSection" class="hidden space-y-6">
+      
+      <!-- Back Navigation Header -->
+      <div class="flex items-center justify-between bg-white rounded-2xl px-6 py-4 border border-slate-200/80 shadow-sm">
+        <div class="flex items-center gap-2">
+          <button onclick="app.returnToProblem()" class="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>원래 문제 풀이로 복귀</span>
+          </button>
+          <span class="text-xs text-slate-400 hidden sm:inline">|</span>
+          <span class="text-xs text-slate-500 hidden sm:inline" id="conceptNavContext">막힌 단계의 기초 개념을 학습 중입니다</span>
+        </div>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+          <span>개념 역추적 모드</span>
+        </span>
+      </div>
+
+      <!-- Domino Tree Chain Visualizer -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+              <i data-lucide="git-branch" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">지식의 도미노: 선수 개념 연결망</h3>
+              <p class="text-xs text-slate-500">도미노 블록을 클릭하면 해당 개념의 카드와 확인 문제로 즉시 전환됩니다.</p>
+            </div>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">클릭하여 학습 대상 변경</span>
+        </div>
+
+        <div id="dominoChainContainer" class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-wrap items-center justify-center gap-3">
+          <!-- Domino blocks dynamically rendered here -->
+        </div>
+      </div>
+
+      <!-- Main Concept Learning Card -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6" id="conceptCard">
+        
+        <!-- Concept Header -->
+        <div class="pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="conceptCurriculumTag" class="text-xs font-medium text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">2022 개정 교육과정</span>
+            </div>
+            <h2 id="conceptName" class="text-xl font-bold text-slate-900 mt-1.5">개념 이름</h2>
+          </div>
+          <div class="text-xs text-slate-400 flex items-center gap-1">
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+            <span>3분 집중 핵심 학습</span>
+          </div>
+        </div>
+
+        <!-- 1~2 Sentence Core Explanation -->
+        <div class="p-4 rounded-xl bg-sky-50/60 border border-sky-100">
+          <p class="text-xs font-bold text-sky-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i data-lucide="lightbulb" class="w-4 h-4 text-sky-600"></i>
+            <span>핵심 직관 요약</span>
+          </p>
+          <p id="conceptShortExplanation" class="text-sm text-slate-800 leading-relaxed font-medium">
+            <!-- Explanation rendered here -->
+          </p>
+        </div>
+
+        <!-- Core Formula & Symbol / Unit Explanations -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+          <!-- Formula Box -->
+          <div class="md:col-span-5 p-4 rounded-xl bg-slate-900 text-white flex flex-col justify-center items-center text-center shadow-inner">
+            <span class="text-[11px] font-semibold text-slate-400 tracking-wider uppercase mb-2">필수 공식 및 관계식</span>
+            <div id="conceptFormulaBox" class="text-lg md:text-xl font-bold py-2 math-content text-sky-300">
+              <!-- Formula here -->
+            </div>
+            <span class="text-[11px] text-slate-400 mt-2">정확한 기호와 KaTeX 표기</span>
+          </div>
+
+          <!-- Symbols & Units Table -->
+          <div class="md:col-span-7 p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 block">기호와 단위의 의미</span>
+            <div id="conceptSymbolsList" class="space-y-2 text-xs">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Visualizer (Physics FBD, Chem Particle/Mole, Math Tile) -->
+        <div id="subjectVisualizerBox" class="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="activity" class="w-4 h-4 text-indigo-500"></i>
+              <span id="visualizerTitle">인터랙티브 시각 자료</span>
+            </span>
+            <span class="text-[11px] text-slate-400" id="visualizerNote">직관적인 이해를 돕는 시각 모형</span>
+          </div>
+          <div id="visualizerCanvasContainer" class="w-full flex items-center justify-center min-h-[160px] bg-white rounded-lg border border-slate-200/60 p-3">
+            <!-- Canvas or SVG visualizer rendered here -->
+          </div>
+        </div>
+
+        <!-- Easy Step-by-Step Example -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-amber-100 text-amber-800">적용 예제</span>
+            <h4 id="exampleQuestion" class="text-sm font-bold text-slate-800 math-content">예제 질문</h4>
+          </div>
+          <div id="exampleSteps" class="mt-3 space-y-1.5 text-xs text-slate-600 pl-2 border-l-2 border-amber-300">
+            <!-- Step by step breakdown -->
+          </div>
+        </div>
+
+        <!-- Interactive Check Quiz (확인 문제) -->
+        <div class="p-5 rounded-xl bg-indigo-50/50 border border-indigo-100 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-indigo-600"></i>
+              <span>개념 확인 문제 (직접 풀어보기)</span>
+            </span>
+            <span class="text-[11px] text-indigo-500 font-medium">정답은 제출 후에만 공개됩니다</span>
+          </div>
+
+          <div id="quizQuestion" class="text-sm font-semibold text-slate-800 math-content">
+            <!-- Quiz question -->
+          </div>
+
+          <!-- Quiz Options -->
+          <div id="quizOptionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Submit Quiz Button -->
+          <div class="pt-2 flex justify-end">
+            <button id="submitQuizBtn" onclick="app.submitQuiz()" disabled class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+              <span>정답 확인 및 피드백 받기</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Diagnostic Feedback Alert (Shown after submission) -->
+          <div id="quizFeedbackBox" class="hidden p-4 rounded-xl border transition mt-3 space-y-2">
+            <div class="flex items-center gap-2">
+              <i id="feedbackIcon" data-lucide="check-circle" class="w-5 h-5 flex-shrink-0"></i>
+              <h5 id="feedbackTitle" class="text-sm font-bold">정답입니다!</h5>
+            </div>
+            <p id="feedbackExplanation" class="text-xs leading-relaxed math-content"></p>
+            <div id="feedbackMistakeAnalysis" class="text-xs p-2.5 rounded-lg bg-black/5 leading-relaxed"></div>
+          </div>
+
+        </div>
+
+        <!-- Finish Lesson & Return to Original Problem Button -->
+        <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p class="text-xs text-slate-500">
+            개념을 보완했다면, 이제 원래 문제로 돌아가 막혔던 단계를 다시 도전해 보세요!
+          </p>
+          <button onclick="app.completeConceptAndReturn()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>개념 학습 완료하고 원래 문제 해결하기</span>
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-700">지식의 도미노 (Domino of Knowledge)</span>
+        <span>•</span>
+        <span>2022 개정 수학·물리·화학 과목 통합 AI 학습 시스템</span>
+      </div>
+      <div>
+        <span>Gemini 3.5 Flash & 2022 개정 교육과정 기준 준수</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: Gemini API Key Setup -->
+  <div id="apiKeyModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200/80 space-y-4 animate-scale-up">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2 text-slate-900 font-bold">
+          <i data-lucide="key" class="w-5 h-5 text-indigo-600"></i>
+          <span>Gemini API 키 직접 설정</span>
+        </div>
+        <button onclick="app.closeApiKeyModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-600">
+        <p>
+          사용자의 Google Gemini API 키를 입력하세요. 브라우저의 <strong>localStorage</strong>에만 안전하게 저장되며, 
+          외부에 노출되지 않습니다.
+        </p>
+
+        <!-- API Key Input -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Gemini API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none">
+        </div>
+
+        <!-- Model Selection -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">사용 모델 선택</label>
+          <select id="modelSelect" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-indigo-500 outline-none bg-white">
+            <option value="gemini-3.5-flash" selected>Gemini 3.5 Flash (권장 / 최신 요청 모델)</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+          </select>
+        </div>
+
+        <div class="p-3 rounded-lg bg-sky-50 text-sky-800 text-[11px] leading-relaxed">
+          💡 API 키가 없는 경우에도 상단 탭에서 <strong>수학, 물리, 화학 대표 예제</strong>를 자유롭게 체험하실 수 있습니다.
+        </div>
+
+        <div id="keyCheckResult" class="hidden p-2.5 rounded-lg text-xs"></div>
+      </div>
+
+      <div class="pt-2 flex items-center justify-between gap-2">
+        <button onclick="app.clearApiKey()" class="px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition">
+          키 삭제
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="app.closeApiKeyModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition">
+            닫기
+          </button>
+          <button onclick="app.saveApiKey()" id="saveKeyBtn" class="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition">
+            검증 및 저장
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: 2022 Curriculum Units Reference -->
+  <div id="curriculumModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200/80 space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2 text-slate-900 font-bold">
+          <i data-lucide="book-marked" class="w-5 h-5 text-indigo-600"></i>
+          <span>2022 개정 교육과정 과목별 단원 체계</span>
+        </div>
+        <button onclick="app.closeCurriculumModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-4 text-xs pr-1" id="curriculumModalBody">
+        <!-- Loaded dynamically from curriculum_data.py -->
+      </div>
+
+      <div class="pt-2 text-right">
+        <button onclick="app.closeCurriculumModal()" class="px-4 py-2 text-xs font-semibold bg-slate-800 text-white rounded-lg">
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/mockData.js"></script>
+  <script src="/static/js/visualizers.js"></script>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
