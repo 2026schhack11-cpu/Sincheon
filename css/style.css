@@ -1,0 +1,232 @@
+/*
+  style.css - '지식의 도미노' (Domino of Knowledge) Clean & Bright Style
+*/
+
+@keyframes scaleUp {
+  0% { transform: scale(0.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Domino Tile Animations and Appearance */
+.domino-tile {
+  position: relative;
+  width: 140px;
+  min-height: 80px;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.domino-tile:hover {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  border-color: #6366f1;
+}
+
+.domino-tile.active {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.domino-tile .domino-dots {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed #cbd5e1;
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.domino-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #64748b;
+}
+
+.domino-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-weight: bold;
+}
+
+/* KaTeX custom container styling to prevent overflow */
+.math-content {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+.math-content .katex-display {
+  margin: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+}
+
+.math-content .katex {
+  font-size: 1.05em;
+  text-rendering: auto;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Radio Choice Card for Quiz */
+.quiz-option-btn {
+  transition: all 0.15s ease;
+  border: 1.5px solid #e2e8f0;
+}
+
+.quiz-option-btn:hover {
+  border-color: #818cf8;
+  background-color: #f8fafc;
+}
+
+.quiz-option-btn.selected {
+  border-color: #4f46e5;
+  background-color: #eef2ff;
+  color: #312e81;
+}
+
+.quiz-option-btn.correct {
+  border-color: #10b981 !important;
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+}
+
+.quiz-option-btn.incorrect {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+}
+
+/* Free Body Diagram Canvas */
+#fbdCanvas {
+  background-color: #ffffff;
+  border-radius: 8px;
+}
+
+/* Animated Domino Wave for Live Loading State */
+.domino-wave-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px;
+  height: 80px;
+  perspective: 800px;
+  margin-bottom: 12px;
+}
+
+.domino-wave-piece {
+  width: 24px;
+  height: 58px;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 2.5px solid #6366f1;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px -2px rgba(99, 102, 241, 0.25), 0 3px 6px -2px rgba(0, 0, 0, 0.05);
+  transform-origin: bottom center;
+  animation: dominoWave 1.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.domino-wave-piece::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  right: 3px;
+  height: 1px;
+  border-top: 1.5px dashed #c7d2fe;
+}
+
+.domino-wave-piece .dot-top,
+.domino-wave-piece .dot-bottom {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #6366f1;
+}
+
+.domino-wave-piece .dot-top { top: 9px; }
+.domino-wave-piece .dot-bottom { bottom: 9px; }
+
+.domino-wave-piece:nth-child(1) { animation-delay: 0.0s; border-color: #6366f1; }
+.domino-wave-piece:nth-child(1) .dot-top, .domino-wave-piece:nth-child(1) .dot-bottom { background-color: #6366f1; }
+
+.domino-wave-piece:nth-child(2) { animation-delay: 0.2s; border-color: #3b82f6; }
+.domino-wave-piece:nth-child(2) .dot-top, .domino-wave-piece:nth-child(2) .dot-bottom { background-color: #3b82f6; }
+
+.domino-wave-piece:nth-child(3) { animation-delay: 0.4s; border-color: #0284c7; }
+.domino-wave-piece:nth-child(3) .dot-top, .domino-wave-piece:nth-child(3) .dot-bottom { background-color: #0284c7; }
+
+.domino-wave-piece:nth-child(4) { animation-delay: 0.6s; border-color: #10b981; }
+.domino-wave-piece:nth-child(4) .dot-top, .domino-wave-piece:nth-child(4) .dot-bottom { background-color: #10b981; }
+
+.domino-wave-piece:nth-child(5) { animation-delay: 0.8s; border-color: #8b5cf6; }
+.domino-wave-piece:nth-child(5) .dot-top, .domino-wave-piece:nth-child(5) .dot-bottom { background-color: #8b5cf6; }
+
+@keyframes dominoWave {
+  0%, 100% {
+    transform: rotateZ(0deg) translateY(0);
+  }
+  20% {
+    transform: rotateZ(32deg) translateY(-6px);
+  }
+  45% {
+    transform: rotateZ(10deg) translateY(0);
+  }
+}
+
+/* Progress bar shimmer */
+@keyframes shimmerAnim {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.progress-shimmer {
+  background: linear-gradient(90deg, #6366f1 0%, #38bdf8 50%, #6366f1 100%);
+  background-size: 200% 100%;
+  animation: shimmerAnim 1.8s infinite linear;
+}
+
+/* Pulse animation for active step */
+.step-pulse {
+  animation: stepPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes stepPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+}
